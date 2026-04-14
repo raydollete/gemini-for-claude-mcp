@@ -9,17 +9,17 @@ export interface ILogger {
 }
 
 export function createLogger(level: string): ILogger {
-  const pinoLogger: PinoLogger = pino(
+  // Logs MUST go to stderr — stdout is reserved for JSON-RPC frames on stdio MCP transport.
+  const pinoLogger: PinoLogger =
     process.env['NODE_ENV'] !== 'production'
-      ? {
+      ? pino({
           level,
           transport: {
             target: 'pino-pretty',
-            options: { colorize: true },
+            options: { colorize: true, destination: 2 },
           },
-        }
-      : { level },
-  );
+        })
+      : pino({ level }, pino.destination(2));
 
   return {
     info: (message, context): void => {
