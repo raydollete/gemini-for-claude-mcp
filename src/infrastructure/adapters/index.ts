@@ -1,1 +1,1 @@
-export { GoogleGeminiClientAdapter } from './google-gemini-client.adapter.js';
+export { GoogleGenAIClientAdapter } from './google-genai-client.adapter.js';

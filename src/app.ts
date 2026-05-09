@@ -1,6 +1,6 @@
 import { loadConfig } from './config/index.js';
 import { createLogger } from './shared/logger/index.js';
-import { GoogleGeminiClientAdapter } from './infrastructure/adapters/index.js';
+import { GoogleGenAIClientAdapter } from './infrastructure/adapters/index.js';
 import {
   QueryGeminiUseCase,
   ListModelsUseCase,
@@ -26,13 +26,16 @@ async function main(): Promise<void> {
 
   logger.info('Starting Gemini MCP Server', {
     nodeEnv: config.NODE_ENV,
+    project: config.GOOGLE_CLOUD_PROJECT,
+    location: config.GOOGLE_CLOUD_LOCATION,
     model: config.GEMINI_DEFAULT_MODEL,
     maxOutputTokens: config.GEMINI_MAX_OUTPUT_TOKENS,
   });
 
   // Create infrastructure adapters
-  const geminiClient = new GoogleGeminiClientAdapter(
-    config.GEMINI_API_KEY,
+  const geminiClient = new GoogleGenAIClientAdapter(
+    config.GOOGLE_CLOUD_PROJECT,
+    config.GOOGLE_CLOUD_LOCATION,
     config.GEMINI_TIMEOUT_MS,
     logger,
   );

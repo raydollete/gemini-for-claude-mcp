@@ -156,7 +156,8 @@ describe('FeatureName', () => {
 
 ```typescript
 const EnvSchema = z.object({
-  GEMINI_API_KEY: z.string().min(1),
+  GOOGLE_CLOUD_PROJECT: z.string().min(1),
+  GOOGLE_CLOUD_LOCATION: z.string().min(1).default('global'),
   NODE_ENV: z.enum(['development', 'production', 'test']),
 });
 

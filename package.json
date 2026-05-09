@@ -31,7 +31,7 @@
   "author": "Ray Dollete <ray@raydollete.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
+    "@google/genai": "^2.0.1",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "neverthrow": "^7.0.0",
     "pino": "^9.0.0",

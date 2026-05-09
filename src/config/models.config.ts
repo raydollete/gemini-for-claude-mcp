@@ -15,9 +15,19 @@ import type { GeminiModel } from '../domain/entities/index.js';
  */
 export const GEMINI_MODELS: readonly GeminiModel[] = [
   {
+    name: 'gemini-3.1-pro-preview',
+    displayName: 'Gemini 3.1 Pro Preview',
+    description:
+      'Latest preview reasoning model with 1M context. Vertex AI: requires GOOGLE_CLOUD_LOCATION=global.',
+    inputTokenLimit: 1048576,
+    outputTokenLimit: 65536,
+    supportedGenerationMethods: ['generateContent'],
+  },
+  {
     name: 'gemini-3-pro-preview',
     displayName: 'Gemini 3 Pro Preview',
-    description: 'Most advanced reasoning model with 1M context - best for complex tasks',
+    description:
+      'Advanced reasoning model with 1M context. Vertex AI: requires GOOGLE_CLOUD_LOCATION=global.',
     inputTokenLimit: 1048576,
     outputTokenLimit: 65536,
     supportedGenerationMethods: ['generateContent'],

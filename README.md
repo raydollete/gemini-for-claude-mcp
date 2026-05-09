@@ -36,10 +36,19 @@ git clone https://github.com/Raydius/gemini-for-claude-mcp.git
 cd gemini-for-claude-mcp
 npm install && npm run build
 
-# 2. Add to Claude Code (replace with your actual path and API key)
-claude mcp add gemini -e GEMINI_API_KEY=your-api-key -e GEMINI_DEFAULT_MODEL=gemini-3-pro-preview -- node $(pwd)/dist/app.js
+# 2. Authenticate to Google Cloud (one-time)
+gcloud auth application-default login
 
-# 3. Start Claude Code and try it out
+# 3. Add to Claude Code (replace project ID and absolute path)
+#    GOOGLE_CLOUD_LOCATION is optional and defaults to `global`. The newest
+#    preview models (gemini-3-pro-preview, gemini-3.1-pro-preview) require
+#    `global` — regional endpoints return 404 for those models.
+claude mcp add gemini \
+  -e GOOGLE_CLOUD_PROJECT=your-gcp-project-id \
+  -e GEMINI_DEFAULT_MODEL=gemini-2.5-pro \
+  -- node $(pwd)/dist/app.js
+
+# 4. Start Claude Code and try it out
 claude
 ```
 
@@ -64,7 +73,10 @@ Then ask Claude:
 
 - **Claude Code** - [Installation guide](https://docs.anthropic.com/en/docs/claude-code)
 - **Node.js 20+** - [Download](https://nodejs.org/)
-- **Gemini API Key** - [Get one from Google AI Studio](https://aistudio.google.com/app/apikey)
+- **Google Cloud project** with the Vertex AI API enabled. See [Enable the Vertex AI API](https://cloud.google.com/vertex-ai/docs/start/cloud-environment).
+- **IAM role**: the principal running this server needs `roles/aiplatform.user` (or higher) on the project.
+- **Authentication**: either Application Default Credentials via `gcloud auth application-default login` (recommended for local dev), or a service-account JSON key referenced by `GOOGLE_APPLICATION_CREDENTIALS`.
+- **`gcloud` CLI** - [Install](https://cloud.google.com/sdk/docs/install) (only needed for ADC login).
 
 ---
 
@@ -79,15 +91,25 @@ npm install
 npm run build
 ```
 
-### Step 2: Add to Claude Code
+### Step 2: Authenticate to Google Cloud
+
+```bash
+gcloud auth application-default login
+```
+
+This stores Application Default Credentials that the server uses to call Vertex AI. Alternatively, set `GOOGLE_APPLICATION_CREDENTIALS` to the path of a service-account JSON key.
+
+### Step 3: Add to Claude Code
 
 **Option A: Using the CLI (Recommended)**
 
 ```bash
 # Basic setup (substitute default model for any valid Gemini model designation string)
+# GOOGLE_CLOUD_LOCATION defaults to `global` and is omitted here. See "Vertex AI
+# location" below if you need to pin a regional endpoint.
 claude mcp add gemini \
-  -e GEMINI_API_KEY=your-api-key \
-  -e GEMINI_DEFAULT_MODEL=gemini-3-pro-preview \
+  -e GOOGLE_CLOUD_PROJECT=your-gcp-project-id \
+  -e GEMINI_DEFAULT_MODEL=gemini-2.5-pro \
   -- node /absolute/path/to/gemini-for-claude-mcp/dist/app.js
 ```
 
@@ -102,7 +124,7 @@ Edit your Claude Code settings file (`~/.claude.json`):
       "command": "node",
       "args": ["/absolute/path/to/gemini-for-claude-mcp/dist/app.js"],
       "env": {
-        "GEMINI_API_KEY": "your-api-key-here",
+        "GOOGLE_CLOUD_PROJECT": "your-gcp-project-id",
         "GEMINI_DEFAULT_MODEL": "gemini-2.5-flash"
       }
     }
@@ -112,7 +134,7 @@ Edit your Claude Code settings file (`~/.claude.json`):
 
 See [Configuration](#configuration) for all available options and [supported models](https://ai.google.dev/gemini-api/docs/models).
 
-### Step 3: Verify Installation
+### Step 4: Verify Installation
 
 Start Claude Code and verify the server is connected:
 
@@ -197,10 +219,19 @@ Configure the server using environment variables:
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `GEMINI_API_KEY` | Yes | - | Your Gemini API key from Google AI Studio |
+| `GOOGLE_CLOUD_PROJECT` | Yes | - | Google Cloud project ID hosting Vertex AI |
+| `GOOGLE_CLOUD_LOCATION` | No | `global` | Vertex AI location. Newer preview models (e.g. `gemini-3-pro-preview`, `gemini-3.1-pro-preview`) are only served from `global` — regional endpoints like `us-central1` return 404 for those models. Override only if every model you call is available in that region. |
+| `GOOGLE_APPLICATION_CREDENTIALS` | No | - | Path to a service-account JSON key. Falls back to Application Default Credentials when unset. |
 | `GEMINI_DEFAULT_MODEL` | Yes | - | Gemini model to use for queries |
-| `GEMINI_TIMEOUT_MS` | No | `120000` | Request timeout in milliseconds |
+| `GEMINI_MAX_OUTPUT_TOKENS` | No | `65536` | Max output tokens injected into requests |
+| `GEMINI_TIMEOUT_MS` | No | `300000` | Request timeout in milliseconds |
 | `LOG_LEVEL` | No | `info` | Log level (`fatal`, `error`, `warn`, `info`, `debug`, `trace`) |
+
+### Vertex AI location (`GOOGLE_CLOUD_LOCATION`)
+
+This server defaults to `global` because the newest preview Gemini models — including `gemini-3-pro-preview` and `gemini-3.1-pro-preview` — are **only** served from the `global` location. Pointing the client at a regional endpoint (`us-central1`, `europe-west4`, etc.) will return a 404 for those models, which surfaces as a `GEMINI_MODEL_NOT_FOUND` error.
+
+Override `GOOGLE_CLOUD_LOCATION` only if **every** model you intend to call is available in that region. Check per-model availability at https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations before pinning a region.
 
 ---
 
@@ -222,8 +253,8 @@ Add to your Claude Desktop configuration:
       "command": "node",
       "args": ["/absolute/path/to/gemini-for-claude-mcp/dist/app.js"],
       "env": {
-        "GEMINI_API_KEY": "your-api-key-here",
-		"GEMINI_DEFAULT_MODEL": "gemini-2.5-flash"
+        "GOOGLE_CLOUD_PROJECT": "your-gcp-project-id",
+        "GEMINI_DEFAULT_MODEL": "gemini-2.5-flash"
       }
     }
   }
@@ -235,8 +266,12 @@ Add to your Claude Desktop configuration:
 This server uses stdio transport. Start it with:
 
 ```bash
-GEMINI_API_KEY=your-key GEMINI_DEFAULT_MODEL=gemini-2.5-flash node dist/app.js
+GOOGLE_CLOUD_PROJECT=your-gcp-project-id \
+GEMINI_DEFAULT_MODEL=gemini-2.5-flash \
+node dist/app.js
 ```
+
+This relies on Application Default Credentials. To use a service-account key instead, also export `GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json`.
 
 The server communicates via stdin/stdout using the MCP protocol.
 
@@ -409,9 +444,18 @@ For detailed architectural documentation, see [ARCHITECTURE.md](ARCHITECTURE.md)
 - Check the path to `dist/app.js` is absolute and correct
 - Ensure the project has been built: `npm run build`
 
-**"GEMINI_API_KEY is required"**
-- Verify your API key is set in the MCP configuration
+**"GOOGLE_CLOUD_PROJECT is required"**
+- Verify the project ID is set in the MCP configuration
 - Check with: `claude mcp list` to see environment variables
+
+**"Could not load the default credentials" / 401 Unauthorized**
+- Run `gcloud auth application-default login` to refresh ADC
+- Or set `GOOGLE_APPLICATION_CREDENTIALS` to a valid service-account JSON key
+- Confirm the principal has `roles/aiplatform.user` on the project
+
+**"Permission denied on resource project ..."**
+- The Vertex AI API may not be enabled. See [Enable the API](https://cloud.google.com/vertex-ai/docs/start/cloud-environment).
+- The service account or user lacks `roles/aiplatform.user`.
 
 **Server crashes on startup**
 - Check Node.js version: `node --version` (must be 20+)
@@ -436,7 +480,11 @@ For detailed architectural documentation, see [ARCHITECTURE.md](ARCHITECTURE.md)
 Enable debug logging for troubleshooting:
 
 ```bash
-claude mcp add gemini -e GEMINI_API_KEY=your-key -e LOG_LEVEL=debug -- node /path/to/dist/app.js
+claude mcp add gemini \
+  -e GOOGLE_CLOUD_PROJECT=your-gcp-project-id \
+  -e GEMINI_DEFAULT_MODEL=gemini-2.5-pro \
+  -e LOG_LEVEL=debug \
+  -- node /path/to/dist/app.js
 ```
 
 ---

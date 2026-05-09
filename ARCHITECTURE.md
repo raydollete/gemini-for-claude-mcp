@@ -66,7 +66,7 @@ The innermost layer holding business logic. **Zero external dependencies (no MCP
 Implements the contracts defined by Ports and handles all external communication.
 
 - **`adapters/`**: Implementations of domain Ports.
-  - Example: `GoogleGeminiClientAdapter` implements `IGeminiClient` using `@google/generative-ai` SDK.
+  - Example: `GoogleGenAIClientAdapter` implements `IGeminiClient` using the `@google/genai` SDK against Vertex AI.
 - **`controllers/`**: MCP request handlers. Receive raw input, validate with Zod schemas, call use cases, format responses.
 - **`schemas/`**: Zod validation schemas for MCP tool inputs.
 - **`mcp/`**: MCP server setup using `@modelcontextprotocol/sdk`, tool registry, and tool definitions with JSON schemas.
@@ -101,7 +101,7 @@ Implements the contracts defined by Ports and handles all external communication
 | Language | TypeScript (Strict Mode) |
 | Runtime | Node.js 20+ |
 | MCP SDK | `@modelcontextprotocol/sdk` |
-| AI SDK | `@google/generative-ai` |
+| AI SDK | `@google/genai` (Vertex AI mode) |
 | Error Handling | `neverthrow` (Result pattern) |
 | Validation | `zod` |
 | Logging | `pino` |
@@ -135,7 +135,7 @@ app.ts (entry point)
         │
         ├── infrastructure/adapters/ ──implements──▶ domain/ports/
         │           │
-        │           └── uses: @google/generative-ai SDK
+        │           └── uses: @google/genai SDK (Vertex AI)
         │
         ├── domain/use-cases/ ◀──depends on── domain/ports/ (interfaces only)
         │           │
